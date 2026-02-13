@@ -36,9 +36,9 @@ export default function RootLayout({
           <HeaderProvider>
             <div className="min-h-screen flex flex-col">
               <AppHeader />
-              <main className="flex-1">{children}</main>
-              <footer className="border-t border-gray-200 bg-white">
-                <div className="max-w-5xl mx-auto px-4 py-4 text-center text-xs text-gray-400">
+              <main className="flex-1 flex flex-col">{children}</main>
+              <footer className="border-t border-white/10 bg-black">
+                <div className="max-w-5xl mx-auto px-4 py-4 text-center text-xs text-white/30">
                   Migration Checker &mdash; Compare pages during website migrations
                 </div>
               </footer>

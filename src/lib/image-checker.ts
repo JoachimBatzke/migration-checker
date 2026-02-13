@@ -126,12 +126,12 @@ export async function checkImages(
     const img = targetImages[i];
     targetByUrl.set(img.src, i);
 
-    const fname = getFilename(img.src);
+    const fname = getFilename(img.src).toLowerCase();
     if (fname && !targetByFilename.has(fname)) {
       targetByFilename.set(fname, i);
     }
 
-    const normFname = normalizeFilename(fname);
+    const normFname = normalizeFilename(fname).toLowerCase();
     if (normFname && !targetByNormFilename.has(normFname)) {
       targetByNormFilename.set(normFname, i);
     }
@@ -161,8 +161,8 @@ export async function checkImages(
     }
 
     if (!matched) {
-      // Layer 2: Filename match
-      const fname = getFilename(src.src);
+      // Layer 2: Filename match (case-insensitive)
+      const fname = getFilename(src.src).toLowerCase();
       const fnameIdx = targetByFilename.get(fname);
       if (fname && fnameIdx !== undefined && unmatchedTargetIndices.includes(fnameIdx)) {
         details.push({
@@ -178,9 +178,9 @@ export async function checkImages(
     }
 
     if (!matched) {
-      // Layer 3: Normalized filename match
-      const fname = getFilename(src.src);
-      const normFname = normalizeFilename(fname);
+      // Layer 3: Normalized filename match (case-insensitive)
+      const fname = getFilename(src.src).toLowerCase();
+      const normFname = normalizeFilename(fname).toLowerCase();
       const normIdx = targetByNormFilename.get(normFname);
       if (normFname && normIdx !== undefined && unmatchedTargetIndices.includes(normIdx)) {
         details.push({

@@ -3,9 +3,9 @@
 import type { ComparisonResult } from '@/lib/types';
 
 function getScoreColor(score: number): string {
-  if (score >= 90) return 'bg-green-100 text-green-700 border-green-300';
-  if (score >= 70) return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-  return 'bg-red-100 text-red-700 border-red-300';
+  if (score >= 90) return 'bg-green-500/15 text-green-400 border-green-500/30';
+  if (score >= 70) return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
+  return 'bg-red-500/15 text-red-400 border-red-500/30';
 }
 
 export default function SummaryScore({ result }: { result: ComparisonResult }) {
@@ -27,7 +27,7 @@ export default function SummaryScore({ result }: { result: ComparisonResult }) {
           key={stat.label}
           className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${getScoreColor(scores[i])}`}
         >
-          <span className="text-gray-500 font-normal">{stat.label}</span>
+          <span className="text-white/60 font-normal">{stat.label}</span>
           {stat.value}
         </span>
       ))}

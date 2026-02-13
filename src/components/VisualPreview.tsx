@@ -46,29 +46,29 @@ export default function VisualPreview({
   }, [sendToggle, highlightMode]);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+    <div className="rounded-lg border border-white/10 bg-white/[0.03] shadow-sm">
+      <div className="px-4 py-3 border-b border-white/10 bg-white/[0.05] rounded-t-lg">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="text-sm font-semibold text-gray-900 shrink-0">{label}</span>
+            <span className="text-sm font-semibold text-white shrink-0">{label}</span>
             <a
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:underline truncate"
+              className="text-xs text-[#C4FF47]/70 hover:text-[#C4FF47] hover:underline truncate"
             >
               {url}
             </a>
           </div>
 
-          <div className="flex rounded-lg overflow-hidden border border-gray-300">
+          <div className="flex rounded-lg overflow-hidden border border-white/20">
             <button
               type="button"
               onClick={() => handleToggle('migrated')}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 highlightMode === 'migrated'
                   ? 'bg-green-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15'
               }`}
             >
               Migrated
@@ -76,10 +76,10 @@ export default function VisualPreview({
             <button
               type="button"
               onClick={() => handleToggle('not-migrated')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-gray-300 transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium border-l border-white/20 transition-colors ${
                 highlightMode === 'not-migrated'
                   ? 'bg-red-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  : 'bg-white/10 text-white/70 hover:bg-white/15'
               }`}
             >
               Not Migrated
@@ -94,7 +94,7 @@ export default function VisualPreview({
           srcDoc={annotatedHtml}
           sandbox="allow-scripts allow-same-origin"
           onLoad={handleIframeLoad}
-          className="w-full h-full border-0 rounded-b-lg"
+          className="w-full h-full border-0 rounded-b-lg bg-white"
           title={`${label} preview`}
         />
       </div>

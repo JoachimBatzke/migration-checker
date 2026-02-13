@@ -106,3 +106,18 @@ export function validateSelector(selector: string): boolean {
   const parts = trimmed.split(',').map((p) => p.trim());
   return parts.every((part) => SAFE_SELECTOR_PATTERN.test(part));
 }
+
+const MAX_SELECTOR_ARRAY_LENGTH = 10;
+
+/**
+ * Validates an array of CSS selectors. Each must pass validateSelector()
+ * and the array must not exceed MAX_SELECTOR_ARRAY_LENGTH entries.
+ */
+export function validateSelectorArray(selectors: unknown): selectors is string[] {
+  if (!Array.isArray(selectors)) return false;
+  if (selectors.length === 0) return true;
+  if (selectors.length > MAX_SELECTOR_ARRAY_LENGTH) return false;
+  return selectors.every(
+    (s) => typeof s === 'string' && validateSelector(s)
+  );
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey } from '@/lib/auth';
 import { checkApiRateLimit, releaseApiRequest } from '@/lib/api-rate-limiter';
-import { validateSelector } from '@/lib/url-validator';
+import { validateSelector, validateSelectorArray } from '@/lib/url-validator';
 import { runComparison, ComparisonError } from '@/lib/comparison-pipeline';
 import { getResultStore } from '@/lib/result-store';
 import type { ComparisonRequest, HeadlessApiResponse } from '@/lib/types';
@@ -76,7 +76,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { sourceUrl, targetUrl, sourceSelector, targetSelector, sourceAuth, targetAuth } = body;
+    const {
+      sourceUrl, targetUrl, sourceSelector, targetSelector,
+      sourceIncludeSelectors, sourceExcludeSelectors,
+      targetIncludeSelectors, targetExcludeSelectors,
+      sourceAuth, targetAuth,
+    } = body;
 
     if (!sourceUrl || !targetUrl) {
       return NextResponse.json(
@@ -105,12 +110,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate include/exclude selector arrays if provided
+    const selectorArrayFields = [
+      { value: sourceIncludeSelectors, name: 'sourceIncludeSelectors' },
+      { value: sourceExcludeSelectors, name: 'sourceExcludeSelectors' },
+      { value: targetIncludeSelectors, name: 'targetIncludeSelectors' },
+      { value: targetExcludeSelectors, name: 'targetExcludeSelectors' },
+    ] as const;
+
+    for (const field of selectorArrayFields) {
+      if (field.value != null && !validateSelectorArray(field.value)) {
+        return NextResponse.json(
+          {
+            error: `Invalid ${field.name}: must be an array of up to 10 safe CSS selectors`,
+            code: 'UNSAFE_SELECTOR',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // 4. Run the comparison pipeline
     const result = await runComparison({
       sourceUrl,
       targetUrl,
       sourceSelector,
       targetSelector,
+      sourceIncludeSelectors,
+      sourceExcludeSelectors,
+      targetIncludeSelectors,
+      targetExcludeSelectors,
       sourceAuth,
       targetAuth,
     });

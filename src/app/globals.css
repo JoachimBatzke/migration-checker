@@ -2,7 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --accent: #C4FF47;
+}
+
 body {
-  color: #171717;
-  background: #f8fafc;
+  color: #e5e5e5;
+  background: #000000;
+}
+
+/* Loading bar animation */
+@keyframes loading-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
 }

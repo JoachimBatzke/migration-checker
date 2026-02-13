@@ -150,11 +150,60 @@ function sanitizeContentHtml(
   return $clone.html() || '';
 }
 
+/**
+ * Apply include selectors: replace content with only elements matching the selectors.
+ */
+function applyIncludeSelectors(
+  $clean: cheerio.CheerioAPI,
+  selectors: string[]
+): cheerio.CheerioAPI {
+  const combinedSelector = selectors.join(',');
+  const $included = cheerio.load('', null, false);
+  $clean(combinedSelector).each((_, el) => {
+    $included.root().append($clean.html(el) || '');
+  });
+  return $included;
+}
+
+/**
+ * Apply exclude selectors: remove matching elements from the content.
+ */
+function applyExcludeSelectors(
+  $clean: cheerio.CheerioAPI,
+  selectors: string[]
+): void {
+  for (const sel of selectors) {
+    $clean(sel).remove();
+  }
+}
+
+export interface ExtractOptions {
+  customSelector?: string | null;
+  includeSelectors?: string[] | null;
+  excludeSelectors?: string[] | null;
+}
+
 export function extractContent(
   html: string,
   pageUrl: string,
-  customSelector?: string | null
+  customSelectorOrOptions?: string | null | ExtractOptions
 ): ExtractionResult {
+  // Parse overloaded argument: string = legacy customSelector, object = full options
+  let customSelector: string | null | undefined;
+  let includeSelectors: string[] | undefined;
+  let excludeSelectors: string[] | undefined;
+
+  if (typeof customSelectorOrOptions === 'object' && customSelectorOrOptions !== null && !Array.isArray(customSelectorOrOptions)) {
+    const opts = customSelectorOrOptions as ExtractOptions;
+    customSelector = opts.customSelector;
+    includeSelectors = opts.includeSelectors?.length ? opts.includeSelectors : undefined;
+    excludeSelectors = opts.excludeSelectors?.length ? opts.excludeSelectors : undefined;
+  } else {
+    customSelector = customSelectorOrOptions as string | null | undefined;
+  }
+
+  const hasFilters = !!(includeSelectors || excludeSelectors);
+
   const $ = cheerio.load(html);
 
   // Get title
@@ -191,10 +240,20 @@ export function extractContent(
 
     // If no semantic container found, fall back to body minus structural elements
     if (!found) {
-      const $clean = cleanContentRoot($('body'), BODY_STRIP_SELECTORS);
+      let $clean = cleanContentRoot($('body'), BODY_STRIP_SELECTORS);
+      if (includeSelectors) {
+        $clean = applyIncludeSelectors($clean, includeSelectors);
+      }
+      if (excludeSelectors) {
+        applyExcludeSelectors($clean, excludeSelectors);
+      }
       const rawText = extractTextWithSpacing($clean.root()[0]);
       const text = normalizeWhitespace(rawText);
-      const images = extractImages($, $('body'), pageUrl);
+      // When filters are active, extract images from filtered content;
+      // otherwise preserve original behavior (images from full body)
+      const images = hasFilters
+        ? extractImages($clean, $clean.root(), pageUrl)
+        : extractImages($, $('body'), pageUrl);
       const contentHtml = sanitizeContentHtml($clean, $clean.root(), pageUrl);
       return {
         title,
@@ -206,10 +265,18 @@ export function extractContent(
   }
 
   // Clean content root: strip noise elements from all content roots
-  const $clean = cleanContentRoot(contentRoot, NOISE_SELECTORS);
+  let $clean = cleanContentRoot(contentRoot, NOISE_SELECTORS);
+  if (includeSelectors) {
+    $clean = applyIncludeSelectors($clean, includeSelectors);
+  }
+  if (excludeSelectors) {
+    applyExcludeSelectors($clean, excludeSelectors);
+  }
   const rawText = extractTextWithSpacing($clean.root()[0]);
   const text = normalizeWhitespace(rawText);
-  const images = extractImages($, contentRoot, pageUrl);
+  const images = hasFilters
+    ? extractImages($clean, $clean.root(), pageUrl)
+    : extractImages($, contentRoot, pageUrl);
   const contentHtml = sanitizeContentHtml($clean, $clean.root(), pageUrl);
 
   return {
@@ -228,11 +295,15 @@ function extractImages(
   const images: ImageInfo[] = [];
   const seen = new Set<string>();
 
-  // <img> tags (skip data URIs — typically lazy-loading placeholders)
+  // <img> tags — resolve lazy-loaded images by checking data-* fallback attributes
   root.find('img').each((_, el) => {
     const src = $(el).attr('src');
-    if (!src || src.startsWith('data:')) return;
-    const absoluteSrc = resolveUrl(src, pageUrl);
+    // If src is missing or a data URI placeholder, try common lazy-loading attributes
+    const effectiveSrc = (src && !src.startsWith('data:'))
+      ? src
+      : $(el).attr('data-lazy-src') || $(el).attr('data-src') || null;
+    if (!effectiveSrc) return;
+    const absoluteSrc = resolveUrl(effectiveSrc, pageUrl);
     if (seen.has(absoluteSrc)) return;
     seen.add(absoluteSrc);
     images.push({

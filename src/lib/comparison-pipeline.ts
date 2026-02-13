@@ -10,6 +10,10 @@ export interface PipelineInput {
   targetUrl: string;
   sourceSelector?: string | null;
   targetSelector?: string | null;
+  sourceIncludeSelectors?: string[] | null;
+  sourceExcludeSelectors?: string[] | null;
+  targetIncludeSelectors?: string[] | null;
+  targetExcludeSelectors?: string[] | null;
   sourceAuth?: AuthCredentials | null;
   targetAuth?: AuthCredentials | null;
 }
@@ -51,8 +55,16 @@ export async function runComparison(input: PipelineInput): Promise<ComparisonRes
   }
 
   // 2. Extract content from both pages
-  const sourceExtraction = extractContent(sourceHtml, input.sourceUrl, input.sourceSelector);
-  const targetExtraction = extractContent(targetHtml, input.targetUrl, input.targetSelector);
+  const sourceExtraction = extractContent(sourceHtml, input.sourceUrl, {
+    customSelector: input.sourceSelector,
+    includeSelectors: input.sourceIncludeSelectors,
+    excludeSelectors: input.sourceExcludeSelectors,
+  });
+  const targetExtraction = extractContent(targetHtml, input.targetUrl, {
+    customSelector: input.targetSelector,
+    includeSelectors: input.targetIncludeSelectors,
+    excludeSelectors: input.targetExcludeSelectors,
+  });
 
   // 3. Compute text diff
   const textDiff = computeDiff(sourceExtraction.text, targetExtraction.text);

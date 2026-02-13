@@ -7,22 +7,22 @@ export default function AppHeader() {
   const { headerData } = useHeader();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur supports-[backdrop-filter]:bg-black/70">
       <div className="mx-auto px-4 py-2">
         <div className="flex items-center justify-between gap-4">
           {/* Left: app name + metadata + scores */}
           <div className="flex items-center gap-3 flex-wrap min-w-0">
             <div className="flex items-center gap-2 shrink-0">
-              <a href="/" className="text-lg font-bold text-gray-900 hover:text-blue-600 transition">
+              <a href="/" className="text-lg font-bold text-[#C4FF47] hover:text-[#d4ff6a] transition">
                 Migration Checker
               </a>
-              <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">
-                MVP
+              <span className="text-xs text-white/60 border border-white/20 rounded px-1.5 py-0.5">
+                v0.1.0
               </span>
             </div>
 
             {headerData?.metadata && (
-              <span className="text-xs text-gray-400 hidden sm:inline">
+              <span className="text-xs text-white/40 hidden sm:inline">
                 Shared &middot; {new Date(headerData.metadata.createdAt).toLocaleDateString()}
                 {' '}&ndash;{' '}
                 {new Date(headerData.metadata.expiresAt).toLocaleDateString()}
@@ -31,7 +31,7 @@ export default function AppHeader() {
 
             {headerData && (
               <>
-                <span className="text-gray-300 hidden sm:inline">|</span>
+                <span className="text-white/20 hidden sm:inline">|</span>
                 <SummaryScore result={headerData.result} />
               </>
             )}
@@ -44,8 +44,8 @@ export default function AppHeader() {
                 onClick={headerData.onToggleSync}
                 className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
                   headerData.syncEnabled
-                    ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    ? 'bg-[#C4FF47] text-black border-[#C4FF47] hover:bg-[#d4ff6a]'
+                    : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15'
                 }`}
               >
                 <svg
@@ -70,20 +70,20 @@ export default function AppHeader() {
                     />
                   )}
                 </svg>
-                <span className="hidden sm:inline">{headerData.syncEnabled ? 'Sync On' : 'Sync Scroll'}</span>
+                <span className="hidden sm:inline">{headerData.syncEnabled ? 'Scroll Sync On' : 'Scroll Sync'}</span>
               </button>
             )}
             {headerData?.onCompareAnother ? (
               <button
                 onClick={headerData.onCompareAnother}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/70 hover:bg-white/10 transition"
               >
                 Compare another
               </button>
             ) : headerData?.compareAnotherHref ? (
               <a
                 href={headerData.compareAnotherHref}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/70 hover:bg-white/10 transition"
               >
                 Compare another
               </a>

@@ -67,6 +67,10 @@ export interface ComparisonRequest {
   targetUrl: string;
   sourceSelector?: string | null;
   targetSelector?: string | null;
+  sourceIncludeSelectors?: string[] | null;
+  sourceExcludeSelectors?: string[] | null;
+  targetIncludeSelectors?: string[] | null;
+  targetExcludeSelectors?: string[] | null;
   sourceAuth?: AuthCredentials | null;
   targetAuth?: AuthCredentials | null;
 }

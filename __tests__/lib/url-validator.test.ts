@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isPrivateIP, validateSelector } from '@/lib/url-validator';
+import { isPrivateIP, validateSelector, validateSelectorArray } from '@/lib/url-validator';
 
 describe('isPrivateIP', () => {
   it('blocks loopback addresses', () => {
@@ -113,5 +113,39 @@ describe('validateSelector', () => {
 
   it('rejects overly long selectors', () => {
     expect(validateSelector('a'.repeat(101))).toBe(false);
+  });
+});
+
+describe('validateSelectorArray', () => {
+  it('accepts empty array', () => {
+    expect(validateSelectorArray([])).toBe(true);
+  });
+
+  it('accepts array of valid selectors', () => {
+    expect(validateSelectorArray(['.content', '#main', 'article'])).toBe(true);
+  });
+
+  it('rejects non-array values', () => {
+    expect(validateSelectorArray('div')).toBe(false);
+    expect(validateSelectorArray(null)).toBe(false);
+    expect(validateSelectorArray(123)).toBe(false);
+  });
+
+  it('rejects array with unsafe selectors', () => {
+    expect(validateSelectorArray(['.content', '[data-x]'])).toBe(false);
+  });
+
+  it('rejects array with non-string entries', () => {
+    expect(validateSelectorArray(['.content', 42])).toBe(false);
+  });
+
+  it('rejects array exceeding max length (10)', () => {
+    const selectors = Array.from({ length: 11 }, (_, i) => `.class${i}`);
+    expect(validateSelectorArray(selectors)).toBe(false);
+  });
+
+  it('accepts array at max length (10)', () => {
+    const selectors = Array.from({ length: 10 }, (_, i) => `.class${i}`);
+    expect(validateSelectorArray(selectors)).toBe(true);
   });
 });

@@ -121,4 +121,179 @@ describe('extractContent', () => {
     // Should get both the source srcset (first URL) and the img
     expect(result.images.length).toBeGreaterThanOrEqual(2);
   });
+
+  describe('includeSelectors', () => {
+    it('keeps only elements matching include selectors', () => {
+      const html = `
+        <html><body><main>
+          <div class="intro">Introduction</div>
+          <div class="article-body">Article content here</div>
+          <div class="sidebar">Sidebar stuff</div>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        includeSelectors: ['.article-body'],
+      });
+      expect(result.text).toContain('Article content here');
+      expect(result.text).not.toContain('Introduction');
+      expect(result.text).not.toContain('Sidebar stuff');
+    });
+
+    it('supports multiple include selectors (OR logic)', () => {
+      const html = `
+        <html><body><main>
+          <div class="intro">Introduction</div>
+          <div class="article-body">Article content</div>
+          <div class="summary">Summary text</div>
+          <div class="sidebar">Sidebar stuff</div>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        includeSelectors: ['.article-body', '.summary'],
+      });
+      expect(result.text).toContain('Article content');
+      expect(result.text).toContain('Summary text');
+      expect(result.text).not.toContain('Introduction');
+      expect(result.text).not.toContain('Sidebar stuff');
+    });
+
+    it('works with auto-detected content root', () => {
+      const html = `
+        <html><body>
+          <nav>Navigation</nav>
+          <main>
+            <div class="hero">Hero banner</div>
+            <div class="content">Main content</div>
+          </main>
+          <footer>Footer</footer>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        includeSelectors: ['.content'],
+      });
+      expect(result.text).toContain('Main content');
+      expect(result.text).not.toContain('Hero banner');
+      expect(result.text).not.toContain('Navigation');
+    });
+
+    it('works with custom selector + include', () => {
+      const html = `
+        <html><body>
+          <div id="wrapper">
+            <div class="keep">Keep this</div>
+            <div class="drop">Drop this</div>
+          </div>
+        </body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        customSelector: '#wrapper',
+        includeSelectors: ['.keep'],
+      });
+      expect(result.text).toContain('Keep this');
+      expect(result.text).not.toContain('Drop this');
+    });
+
+    it('empty includeSelectors array has no effect', () => {
+      const html = `
+        <html><body><main>
+          <p>All content</p>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        includeSelectors: [],
+      });
+      expect(result.text).toContain('All content');
+    });
+
+    it('filters images when include selectors are active', () => {
+      const html = `
+        <html><body><main>
+          <div class="content">
+            <img src="/included.jpg" alt="Included">
+            <p>Text</p>
+          </div>
+          <div class="sidebar">
+            <img src="/excluded.jpg" alt="Excluded">
+          </div>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        includeSelectors: ['.content'],
+      });
+      expect(result.images).toHaveLength(1);
+      expect(result.images[0].alt).toBe('Included');
+    });
+  });
+
+  describe('excludeSelectors', () => {
+    it('removes elements matching exclude selectors', () => {
+      const html = `
+        <html><body><main>
+          <div class="article-body">Article content</div>
+          <div class="author-bio">Author bio</div>
+          <div class="related">Related articles</div>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        excludeSelectors: ['.author-bio', '.related'],
+      });
+      expect(result.text).toContain('Article content');
+      expect(result.text).not.toContain('Author bio');
+      expect(result.text).not.toContain('Related articles');
+    });
+
+    it('works with body fallback', () => {
+      const html = `
+        <html><body>
+          <div class="content">Body content</div>
+          <div class="ad-slot">Advertisement</div>
+        </body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        excludeSelectors: ['.ad-slot'],
+      });
+      expect(result.text).toContain('Body content');
+      expect(result.text).not.toContain('Advertisement');
+    });
+
+    it('empty excludeSelectors array has no effect', () => {
+      const html = `
+        <html><body><main>
+          <p>All content</p>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        excludeSelectors: [],
+      });
+      expect(result.text).toContain('All content');
+    });
+
+    it('filters images when exclude selectors are active', () => {
+      const html = `
+        <html><body><main>
+          <div class="content">
+            <img src="/keep.jpg" alt="Keep">
+          </div>
+          <div class="gallery">
+            <img src="/remove.jpg" alt="Remove">
+          </div>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        excludeSelectors: ['.gallery'],
+      });
+      expect(result.images).toHaveLength(1);
+      expect(result.images[0].alt).toBe('Keep');
+    });
+  });
+
+  describe('includeSelectors + excludeSelectors combined', () => {
+    it('applies include first, then exclude within included content', () => {
+      const html = `
+        <html><body><main>
+          <div class="article">
+            <p>Article text</p>
+            <div class="ad">Ad inside article</div>
+          </div>
+          <div class="sidebar">Sidebar</div>
+        </main></body></html>`;
+      const result = extractContent(html, BASE_URL, {
+        includeSelectors: ['.article'],
+        excludeSelectors: ['.ad'],
+      });
+      expect(result.text).toContain('Article text');
+      expect(result.text).not.toContain('Ad inside article');
+      expect(result.text).not.toContain('Sidebar');
+    });
+  });
 });

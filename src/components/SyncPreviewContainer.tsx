@@ -20,7 +20,7 @@ export default function SyncPreviewContainer({
   targetUrl,
   onSyncStateChange,
 }: SyncPreviewContainerProps) {
-  const [syncEnabled, setSyncEnabled] = useState(false);
+  const [syncEnabled, setSyncEnabled] = useState(true);
   const sourceIframeRef = useRef<HTMLIFrameElement | null>(null);
   const targetIframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -34,7 +34,7 @@ export default function SyncPreviewContainer({
   const lastScrollRelay = useRef<number>(0);
 
   // Use a ref for syncEnabled so the message handler always sees the latest value
-  const syncEnabledRef = useRef(false);
+  const syncEnabledRef = useRef(true);
 
   const postToIframe = useCallback((iframe: HTMLIFrameElement | null, message: Record<string, unknown>) => {
     if (iframe?.contentWindow) {
@@ -136,6 +136,15 @@ export default function SyncPreviewContainer({
       enableSync();
     }
   }, [enableSync, disableSync]);
+
+  // Auto-enable sync after iframes have loaded
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      enableSync();
+    }, 500);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Notify parent of sync state changes
   useEffect(() => {
